@@ -1,0 +1,547 @@
+substitutions:
+  name: "parking-assistant"
+  friendly_name: "Parking Assistant"
+  company_name: "Mike Lawrence"
+  door_distance: "574"          # distance (cm) to garage door
+  door_tolerance: "10"          # +/- tolerance in (cm) for garage door position
+  start_distance: "550"         # distance (cm) when LEDs should start indicating, must be shorter than garage door
+  stop_distance: "73"           # distance (cm) where car is considered good to stop
+  good_tolerance: "2.5"         # how far (cm) past good line before becoming too far
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name} 
+  name_add_mac_suffix: true
+  project:
+    name: Mike Lawrence.${friendly_name}
+    version: 0.1.0
+  on_boot:
+    - light.turn_on:
+        id: led_strip_1
+        brightness: 100%
+        effect: "Parking Bar"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+
+external_components:
+  - source: my_components
+
+esp32_ble_tracker:
+  scan_parameters:
+    # We currently use the defaults to ensure Bluetooth
+    # can co-exist with WiFi In the future we may be able to
+    # enable the built-in coexistence logic in ESP-IDF
+    active: true
+
+bluetooth_proxy:
+  active: true
+
+# Disable logging, this will greatly reduce glitching on the light bar
+logger:
+  level: DEBUG
+  logs:
+    sensor: ERROR
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "*************"
+
+# Enable Over-the-Air updates
+ota:
+  id: my_ota
+  platform: esphome
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # using fast_connect since it is required for hidden networks.
+  fast_connect: true
+  use_address: 172.30.4.181
+
+globals:
+  # Garage Door Closed = 0, Garage Door Open = 10, Car Parking Zone = 20, Car Parked = 30, Car Over = 40
+  - id: state
+    type: int
+
+debug:
+  update_interval: 5s
+
+# config the UART for the TFMini sensor
+uart:
+  - id: tfmini_uart
+    tx_pin: GPIO43
+    rx_pin: GPIO44
+    baud_rate: 115200
+    data_bits: 8
+    parity: NONE
+    stop_bits: 1
+
+i2c:
+  sda: GPIO17
+  scl: GPIO18
+  frequency: 400kHz
+
+button:
+  - platform: restart
+    name: "${friendly_name} Restart"
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "${friendly_name} IP Address"
+      disabled_by_default: true
+
+  - platform: template
+    name: "State"
+    id: state_machine
+    update_interval: 1s
+    lambda: |-
+      static uint8_t last_state = 0;
+      if (id(state) != last_state) {
+        last_state = id(state);
+        switch (id(state)) {
+        case 0: // (door closed) state
+          return { "Door Closed" };
+        case 10: // (door open) state
+          return { "Door Open" };
+        case 11: // (door opened) state
+          return { "Door Opened" };
+        case 20: // (parking init) state
+          return { "Parking Init" };
+        case 21: // (parking) state, LEDs active
+          return { "Parking" };
+        case 22: // (parking timeout) state
+          return { "Parking LED Off" };
+        case 30: // (parked init) state
+          return { "Parked Init" };
+        case 31: // (parked)
+          return { "Parked" };
+        case 32: // (parked timeout) state
+          return { "Parked LED Off" };
+        case 40: // (too far init) state
+          return { "Too Far Init" };
+        case 41: // (too far) state
+          return { "Too Far" };
+        case 42: // (too far timeout) state
+          return { "Too Far LED Off" };
+        default:
+          return {};
+        }
+      } else {
+        return {};
+      }
+
+binary_sensor:
+  # this is a sensor on the garage door that turns true when open
+  - platform: homeassistant
+    name: "Car Garage Door Sensor"
+    id: ha_garage_door_open
+    entity_id: binary_sensor.car_garage_door_sensor
+  # the range finder cannot tell if the garage door is open when a car is present
+  # the sensor above is use to supplement the garage door open state when a car is present
+  - platform: template
+    name: "Garage Door"
+    device_class: garage_door
+    lambda: "return ((id(state) >= 0) && (id(state) < 10)) || id(ha_garage_door_open).state;"
+  - platform: template
+    name: "Car in Garage"
+    device_class: presence
+    lambda: "return (id(state) >= 20);"
+  - platform: template
+    name: "Car Parked Correctly"
+    lambda: "return ((id(state) >= 30) && (id(state) < 40));"
+  - platform: template
+    name: "Car Parked too Far"
+    lambda: "return ((id(state) >= 40) && (id(state) < 50));"
+
+sensor:
+  - platform: stusb4500
+    alert_pin: GPIO8
+    flash_nvm: true
+    snk_pdo_numb: 3
+    v_snk_pdo2: 9.00V
+    i_snk_pdo2: 3.00A
+    v_snk_pdo3: 12.00V
+    i_snk_pdo3: 3.00A
+    power_only_above_5v: true
+    usb_comms_capable: true
+    pd_state:
+      id: pd_state
+      on_value:
+        - lambda: !lambda |-
+            if (x <= 1) {
+              auto call = id(led_status).turn_on();
+              call.set_brightness(0.4);
+              call.set_rgb(1.0, 0.0, 0.0);
+              call.set_effect("Flash");
+              call.perform();
+            } else if (x == 2) {
+              auto call = id(led_status).turn_on();
+              call.set_brightness(0.4);
+              call.set_rgb(0, 1.0, 0.0);
+              //call.set_effect("Flash");
+              call.perform();
+            } else {
+              auto call = id(led_status).turn_on();
+              call.set_brightness(0.4);
+              call.set_rgb(0.0, 1.0, 0.0);
+              call.perform();
+            }
+    pd_status:
+      name: "PD Status"
+
+  - platform: ina2xx_i2c
+    id: led_power
+    model: INA238
+    address: 0x40
+    shunt_resistance: 0.050ohm
+    max_current: 3A
+    adc_range: 0
+    update_interval: 10s
+    current:
+      name: "LED Current"
+      accuracy_decimals: 2
+    bus_voltage:
+      name: "LED Voltage"
+      accuracy_decimals: 2
+    power:
+      name: "LED Power"
+      accuracy_decimals: 2
+
+  - platform: tfmini
+    uart_id: tfmini_uart
+    model: TFMINI_PLUS
+    sample_rate: 10
+    version:
+      name: "TFMini Firmware Version"
+    distance:
+      id: tfmini_distance
+      internal: true
+      name: "TFMini Distance"
+      accuracy_decimals: 1
+
+  - platform: template
+    name: "Distance"
+    id: distance
+    unit_of_measurement: "cm"
+    icon: "mdi:arrow-expand-vertical"
+    device_class: "distance"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    update_interval: 1s
+    lambda: return id(tfmini_distance).state;
+    filters:
+      - delta: 1.5
+      - heartbeat: 10s
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: main_status
+    rgb_order: GRB
+    pin: GPIO7
+    num_leds: 1
+    chipset: ws2812
+    rmt_symbols: 48
+  - platform: esp32_rmt_led_strip
+    id: led_status
+    rgb_order: GRB
+    pin: GPIO6
+    num_leds: 1
+    chipset: ws2812
+    rmt_symbols: 48
+    effects:
+      - pulse:
+          name: "Pulse"
+          transition_length: 500ms
+          update_interval: 700ms
+          max_brightness: 0.4
+      - pulse:
+          name: "Flash"
+          transition_length: 200ms
+          update_interval: 200ms
+
+  - platform: esp32_rmt_led_strip
+    id: led_strip_1
+    default_transition_length : 0s
+    rgb_order: GRB
+    # pin: GPIO47   # LED 1
+    pin: GPIO48   # LED 2
+    num_leds: 141
+    chipset: ws2812
+    use_psram: false
+    rmt_symbols: 288
+    effects:
+      - addressable_scan:
+      - addressable_scan:
+          name: Scan Effect With Custom Values
+          move_interval: 250ms
+          scan_width: 4
+      - addressable_lambda:
+          name: "Parking Bar"
+          update_interval: 20ms
+          lambda: |-
+            static const char TAG[] = "Parking_Bar_Effect";
+            static uint64_t timeout;
+            static uint32_t tick = 0;
+            static int16_t scan = 0;
+            static float bin = 100;
+            static float bin_tolerance; 
+            static uint8_t half_size;
+            static float stopped_pos;
+            static int16_t last_pos_bin;
+            static uint8_t forward;
+            int16_t pos_bin;
+            float pos;
+
+            pos = id(tfmini_distance).state;
+            //pos = 196.0;
+            if (pos == 0.0) {
+              ESP_LOGD(TAG, "Invalid sensor reading");
+              return; // invalid sensor reading, we need to ignore
+            }
+            // process intial run
+            if (initial_run) {
+              ESP_LOGD(TAG, "Effect Started");
+              bin = (${start_distance} - ${stop_distance}) / ((it.size() / 2.0));
+              bin_tolerance = 0.2 * bin;
+              if (bin_tolerance < 1.25)
+                bin_tolerance = 1.25;
+              half_size = (it.size() / 2.0) + 0.5;
+              id(state) = 10;
+              forward = true;
+            }
+            // add hysteresis to pos_bin based on current direction
+            if (forward) {
+              pos_bin = (${start_distance} - pos + bin_tolerance) / bin + 0.5;
+            } else {
+              pos_bin = (${start_distance} - pos - bin_tolerance) / bin + 0.5;
+            }
+            // update direction
+            if(forward) {
+              if (last_pos_bin > pos_bin) {
+                forward = false;
+              }
+            } else {
+              if (last_pos_bin < pos_bin) {
+                forward = true;
+              }
+            }
+            // process state machine
+            switch (id(state)) {
+              // Door Closed = 0, Door Open = 10, Parking = 20, Parked = 30, Too Far = 40
+            case 0: // (door closed) state
+              // bay is always empty when in this state
+              if (pos > ${door_distance} + ${door_tolerance}) {
+                // looks like the door opened
+                ESP_LOGD(TAG, "Entered door opened state");
+                id(state) = 11; // goto (door opened) state
+              }
+              break;
+            case 10: // (door open) state
+              // garage door is open, look for car moving in or door to close
+              if (pos <= ${start_distance}) {
+                // car entered parking zone
+                id(state) = 20; // goto (parking init) state
+              } else if ((abs(pos - ${door_distance}) <=  ${door_tolerance}) && 
+                         (millis() - timeout > 60000)) {
+                // by adding a timeout here we give car a chance to pull in and 
+                // hit the start_distance before registering as a door close
+                ESP_LOGD(TAG, "Entered door closed state");
+                id(state) = 0;
+              }
+              break;
+            case 11: // (door opened) state
+              // garage door just opened, a car may be trying to park
+              if (millis() - timeout > 60000) {
+                // no change in position for 60 seconds
+                if (pos > ${door_distance} + ${door_tolerance}) {
+                  // looks like the door is still open
+                  id(state) = 10; // goto (door open) state
+                } else if (pos <= ${door_distance} - ${door_tolerance}) {
+                  // looks like door is closed
+                  ESP_LOGD(TAG, "Entered door closed state");
+                  id(state) = 0; // goto (door closed) state
+                }
+              } else {
+                if (pos <= ${start_distance}) {
+                  // looks like car entered parking zone
+                  id(state) = 20; // goto (parking init) state
+                }
+              }
+              break;
+            case 20: // (parking init) state
+              id(state) = 21; // pass through this state to the (parking) state
+              ESP_LOGD(TAG, "Entered parking state");
+              if (!forward)
+                scan = pos_bin;
+              else
+                scan = 0;
+              break;
+            case 21: // (parking) state, LEDs active
+              if (millis() - timeout > 60000) {
+                // no change in position for 60 seconds, turn off display
+                it.all().set(Color::BLACK);
+                stopped_pos = pos;
+                ESP_LOGD(TAG, "Timeout, no motion for 60s while in parking state.");
+                id(state) = 22; // goto to the (parking timeout) state
+              } else {
+                if (forward) {
+                  if (scan >= pos_bin)
+                    scan = 0;
+                  else
+                    scan++;
+                } else {
+                  if ((scan == 0) || (scan > pos_bin))
+                    scan = pos_bin;
+                  else
+                    scan--;
+                }
+                for (int16_t i = 0; i < half_size; i++)
+                {
+                  /*if ((i >= pos_bin)) {
+                    it[i].set(Color(0, 0, 190));
+                    it[it.size() - i - 1].set(Color(0, 0, 190));
+                  } else*/ if ((i < pos_bin) && (i > pos_bin - 3)) {
+                    it[i].set(Color(0, 0, 255));
+                    it[it.size() - i - 1].set(Color(0, 0, 255));
+                  } else if ((i < pos_bin) && (i == scan)) {
+                    it[i].set(Color(0, 255, 0));
+                    it[it.size() - i - 1].set(Color(0, 255, 0));
+                  } else if (i < pos_bin) {
+                    it[i].set(Color(0, 128, 0));
+                    it[it.size() - i - 1].set(Color(0, 128, 0));
+                  } else {
+                    it[i].set(Color::BLACK);
+                    it[it.size() - i - 1].set(Color::BLACK);
+                  }
+                }
+                if (pos < ${stop_distance} - ${good_tolerance}) {
+                  id(state) = 40; // car moved too far, goto (too far) state
+                } else if (pos <= ${stop_distance} + 0.5) {
+                  id(state) = 30; // car moved into parked zone, goto (parked init) state
+                } else if (pos <= ${start_distance}) {
+                  id(state) = 21; // stay in this (parking) state
+                } else if (pos > ${door_distance} + ${door_tolerance}) {
+                  it.all().set(Color::BLACK);
+                  id(state) = 10; // car moved out of garage, goto (door open) state
+                  ESP_LOGD(TAG, "Entered door open state");
+                }
+              }
+              break;
+            case 22: // (parking timeout) state
+              if (abs(pos - stopped_pos) > ${good_tolerance}) {
+                // looks like we moved
+                id(state) = 20; // position changed, goto (parking init) state
+                ESP_LOGD(TAG, "Position Changed in timeout");
+              }
+              break;
+            case 30: // (parked init) state
+              // turn LEDs on full brightness green color
+              it.all().set(Color(0, 255, 0));
+              id(state) = 31; // continue to (parked) state
+              ESP_LOGD(TAG, "Entered parked state");
+              break;
+            case 31: // (parked)
+              if (millis() - timeout > 10000) {
+                // no change in position for 10 seconds, turn off display and goto (parked timeout) state
+                stopped_pos = pos;
+                it.all().set(Color::BLACK);
+                ESP_LOGD(TAG, "Timeout, no motion for 10s while in parked state.");
+                id(state) = 32; // goto (parked timeout) state
+              } else {
+                // produce twinkle effect
+                for (uint8_t i = 0; i < it.size(); i++) {
+                  uint8_t green = it[i].get().g;
+                  if (green >= 130 && green <= 126)
+                    green = 128;
+                  if (green > 128)
+                    green -= 2;
+                  else
+                    green += 2;
+                  it[i].set(Color(0, green, 0));
+                }
+                while (random_float() < 0.5) {
+                  uint16_t position = random_uint32() % it.size();
+                  it[position].set(Color(0, 255, 0));
+                }
+                if (pos < ${stop_distance} - ${good_tolerance}) {
+                  id(state) = 40; // car moved too far, goto (too far init) state
+                } else if (pos <= ${stop_distance} + 0.5) {
+                  id(state) = 31; // stay in this (parked) state
+                } else if (pos <= ${start_distance}) {
+                  id(state) = 20; // car moved into parking zone, goto (parking init) state
+                } else if (pos > ${door_distance} + ${door_tolerance}) {
+                  it.all().set(Color::BLACK);
+                  id(state) = 10; // car moved out of garage, goto (door open) state
+                  ESP_LOGD(TAG, "Entered door open state");
+                }
+              }
+              break;
+            case 32: // (parked timeout) state
+              if (abs(pos - stopped_pos) > ${good_tolerance}) {
+                // looks like we moved, do nothing if position is closer than previous postion
+                // prevent LEDS from turning on when somebody passes in front of parked vehicle
+                if (pos > stopped_pos + ${good_tolerance}) {
+                  // car appears to be moving out
+                  id(state) = 20; // position changed enough to move out of (parked) state, goto (parking init) state
+                  ESP_LOGD(TAG, "Position Changed and moving out");
+                }
+              }
+              break;
+            case 40: // (too far init) state
+              // turn LEDs on full brightness red color
+              it.all().set(Color(255, 0, 0));
+              id(state) = 41; // continue to actual (too far) state
+              ESP_LOGD(TAG, "Entered too far state");
+              break;
+            case 41: // (too far) state
+              if (millis() - timeout > 60000) {
+                // no change in position for 60 seconds, turn off display and goto (too far timeout) state
+                it.all().set(Color::BLACK);
+                stopped_pos = pos;
+                scan = 0;
+                ESP_LOGD(TAG, "Timeout, no motion for 60s while in too far state.");
+                id(state) = 42; // goto (too far timeout) state
+              } else {
+                for (uint8_t i = 0 ; i < (it.size() + 1) / 2; i++) {
+                  uint8_t red = (sin((scan + i)*M_PI/8 + M_PI/2) + 1.0) / 2.0 * 255;
+                  it[i].set(Color(red, 0, 0));
+                  it[it.size() - 1 - i].set(Color(red, 0, 0));
+                }
+                scan++;
+                if (pos < ${stop_distance} - ${good_tolerance}) {
+                  id(state) = 41; // stay in car this (too far) state
+                } else if (pos <= ${stop_distance} + 0.5) {
+                  id(state) = 30; // car moved into parked zone, goto (parked init) state
+                } else if (pos <= ${start_distance}) {
+                  id(state) = 20; // car moved into parking zone, goto (parking init) state
+                } else if (pos > ${door_distance} + ${door_tolerance}) {
+                  it.all().set(Color::BLACK);
+                  id(state) = 10; // car moved out of garage, goto (door open) state
+                  ESP_LOGD(TAG, "Entered door open state");
+                }
+              }
+              break;
+            case 42: // (too far timeout) state
+              if (abs(pos - stopped_pos) > ${good_tolerance}) {
+                // looks like we moved
+                id(state) = 40; // position changed, goto (too far init) state
+              }
+              break;
+            default:
+              id(state) = 0;
+                break;
+            }
+            // if there is movement then reset timeout
+            if (last_pos_bin != pos_bin)
+              timeout = millis();
+            last_pos_bin = pos_bin;
+            //if (++tick % 25 == 0)
+            //  ESP_LOGD(TAG, "%s Pos = %0.1f, Bin = %f, Pos Bin = %d, state = %d, scan=%d, change time = %llu", forward ? "Forward" : "Reverse", pos, bin, pos_bin, id(state), scan, millis() - timeout);
