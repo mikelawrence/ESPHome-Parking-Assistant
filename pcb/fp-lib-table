@@ -1,0 +1,8 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "STL9P3LLH6")(type "KiCad")(uri "${KIPRJMOD}/libraries/STL9P3LLH6")(options "")(descr ""))
+  (lib (name "ESDA25P35-1U1M")(type "KiCad")(uri "${KIPRJMOD}/libraries/ESDA25P35-1U1M")(options "")(descr ""))
+  (lib (name "VLCF4028T-100M1R0-2")(type "KiCad")(uri "${KIPRJMOD}/libraries/VLCF4028T-100M1R0-2")(options "")(descr ""))
+  (lib (name "TYPE-C-31-M-12")(type "KiCad")(uri "${KIPRJMOD}/libraries/TYPE-C-31-M-12")(options "")(descr ""))
+  (lib (name "TPS552872RYQR")(type "KiCad")(uri "${KIPRJMOD}/libraries/TPS552872RYQR")(options "")(descr ""))
+)

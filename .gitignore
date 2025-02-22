@@ -11,13 +11,12 @@
 *.kicad_prl
 *.sch-bak
 *~
+*/~
 _autosave-*
 *.tmp
 *-save.pro
 *-save.kicad_pcb
 fp-info-cache
-~*.lck
-\#auto_saved_files#
 
 # Netlist files (exported from Eeschema)
 *.net
@@ -28,4 +27,10 @@ fp-info-cache
 
 # Exported BOM files
 *.xml
-*.csv
+# *.csv
+
+# Added by ML
+__pycache__/
+
+
+*/production/backups
