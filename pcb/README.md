@@ -1,6 +1,6 @@
 # ESPHome-Parking-Assistant PCB
 <p align="center">
-    <img src="meta/ESPHome-Parking-Assistant-Render.png" width="70%">
+    <img src="meta/ESPHome-Parking-Assistant-Render.png" width="70%"> <br />
     3D Render of ESPHome Parking Assistant PCB
 </p>
 
