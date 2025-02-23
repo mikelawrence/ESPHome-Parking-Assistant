@@ -3,11 +3,11 @@ From early on I learned that parking the car in the garage was a problem the nee
 
 I recently moved an the problem became an issue again. Not because there was a crunch time incident but because I just wanted to give us as much room as possible when the car was parked in the garage. So I did some searching on Youtube and found this [video](https://www.youtube.com/watch?v=HqqlY4_3kQ8) from ResinChem Tech. I really liked his use of a RGB LED strip to indicate position and when to stop. 
 
-*So yes this is a complete ripoff of his idea!* BUt I wanted to do several things different. First I wanted to use ESPHome. I find it easier to use and integrate with Home Assistant. Second I really like designing my own hardware. And third I want to keep learning how to use Fusion 360 to design 3D printed stuff.
+*So yes this is a complete ripoff of his idea!* But I wanted to do several things different. First I wanted to use ESPHome. I find it easier to use and integrate with Home Assistant. Second I really like designing my own hardware. And third I want to keep learning how to use Fusion 360 to design 3D printed stuff.
 
 ## Design Decisions
 ### ESP32 and ESPHome
-ESP32's are extremely cheap and have a ton of support like ESPHome. ESPHome is closely aligned with Home Assistant. In fact they are the same company. ESPHome just makes it easier to get an ESP32 running quickly and it directly support Home Assistant. Home Assistant uses ESPHome for some of their hardware like the [Home Assistant Voice Preview Edition](https://www.home-assistant.io/voice-pe/) or [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html). 
+ESP32's are extremely cheap and have a ton of support like ESPHome. ESPHome is closely aligned with Home Assistant. In fact they are the same company. ESPHome just makes it easier to get an ESP32 running quickly and it directly supports Home Assistant. Home Assistant uses ESPHome for some of their hardware like the [Home Assistant Voice Preview Edition](https://www.home-assistant.io/voice-pe/) or [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html). 
 
 I chose a newer ESP32-S3 for this design which supports both WiFi and Bluetooth. The newer ESP32's work better with the ESP-IDF framework as opposed to the default Arduino framework. Not everything is supported in the ESP-IDF, particularly several of the RGB LED libraries like the Adafruit NeoPixel library but the ESP32 RMT LED Strip library works well once you make sure have enough memory RMT memory allocated.
 
