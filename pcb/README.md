@@ -8,7 +8,7 @@ The PCB is designed in [KiCad](https://www.kicad.org/). Fabrication and Assembly
 
 ## Bill of Materials
 <p align="center">
-    <a href="https://htmlpreview.github.io/?https://github.com/mikelawrence/ESPHome-Parking-Assistant/blob/main/pcb/interactive-bom/index.html"><img src="pcb/meta/ESPHome-Parking-Assistant BOM" width="50%"></a> <br />
+    <a href="https://htmlpreview.github.io/?https://github.com/mikelawrence/ESPHome-Parking-Assistant/blob/main/pcb/interactive-bom/index.html"><img src="meta/ESPHome-Parking-Assistant BOM" width="50%"></a> <br />
     Interactive BOM
 </p>
 
