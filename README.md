@@ -36,6 +36,69 @@ The enclosure is designed to mount on [Elfa](https://www.containerstore.com/s/el
 
 There is more information [here](enclosure/README.md) about the enclosure.
 
+## Operation
+
+### LED status
+There are six LEDs on the PCB to indicate status.
+* **Status:** Will be green when operating conditions are normal and red when there has been an error.
+* **+5V:** Will be green when the +5V power supply is on. Note that +5V will only work when PD has been negotiated.
+* **+3.3V:** Will be green when the +3.3V power supply is on. This power supply is always on when connected to USB-C or USB 2.0 power sources. If the LED is off then the USB is not connected or there is a failure.
+* **PD5V:** Will be green when the PDO1 (+5V) has been negotiated.
+* **PD9V:** Will be green when the PDO2 (+9V) has been negotiated.
+* **PD12V:** Will be green when the PDO3 (+12V) has been negotiated.
+
+> [!NOTE]
+> Note: that only one of the three PD LEDs will be lit at a time. If no PD LEDs are lit then no PD was negotiated.
+
+### Connecting RGB LED strips
+The LED connector has 4 wires.
+* **PD**: This is the LED voltage wire, often labeled 12V+ or 5V. This PCB support up to 3A at any voltage as long as the correct USB-C PD Power Source is connected.
+* **33Ω**: This is data line with a 33Ω series resistor. Use this for longer wire runs over 10ft.
+* **249Ω**: This is the same data line but with a 249Ω series resistor. Use this for shorter wire runs of less than 10ft.
+* **GND**: This is minus side of the LED voltage.
+> [!NOTE]
+> Note: Connect only one of 33Ω or 249Ω to your LED Strip.
+> [!NOTE]
+> Note: 12V RGB LEDs run just fine on 9V. In fact running at 9V may extend their life expectancy.
+
+## Configuration
+### STUSB4500 Configuration
+
+> [!CAUTION]
+> When configuring the STUSB4500 for the first time you should realize the default configuration will allow up to 20V on V<sub>BUS</sub>. This PCB works fine with 20V but this voltage is passed to the LED connector. Make sure your LEDs are disconnected before configuring the STUSB4500.
+
+1. Uncomment either the 12V LED section or the 5V LED section in the ```config.yaml``` file.
+2. Uncomment ```flash_nvm: true``` in the ```config.yaml``` file
+   You should see the following messages in your log.
+     ```log
+     [00:10:03][C][stusb4500:112]: STUSB4500:
+     [00:10:03][E][stusb4500:119]:   NVM has been flashed, power cycle the device to reload NVM
+     ```
+   If you forgot to uncomment ```flash_nvm: true``` to the configuration you will see an error in the log.
+     ```log
+     [00:06:27][C][stusb4500:112]: STUSB4500:
+     [00:06:27][E][stusb4500:114]:   NVM does not match current settings, you should set flash_nvm: true for one boot
+     [00:06:27][C][stusb4500:130]:   PDO3 negotiated 20.00V @ 1.00A, 20.00W
+     ```
+3. Power cycle your board. Make sure ```NVM matches settings``` is present in the log and that one of your PDOs was negotiated. The example below shows the result of the 12V LED configuration.
+   ```log
+   [00:00:19][C][stusb4500:112]: STUSB4500:
+   [00:00:19][C][stusb4500:116]:   NVM matches settings
+   [00:00:19][C][stusb4500:130]:   PDO3 negotiated 12.00V @ 3.00A, 36.00W
+   ```
+4. The STUSB4500 comonent does check to see that the NVM is indeed different before flashing the NVM but it is prudent to remove the ```NVM matches settings``` after it is clear the STUSB4500 is worked as configured.
+
+### Installation
+Place the enclosure so the the sensor hits as flat an area as possible. For my car this is the license plate. You may have to play different options for best performance. My experience was pretty much place and forget. It just
+
+Now the sensor is placed, close the garage door with no car present. Home Assistant will show the measured distance. Convert to cm if necessary and subtract half of ```door_tolerance``` set ```door_distance``` to this value.
+
+Now we set ```start_distance``` to ```door_distance``` - 25. Install the current config.
+
+Now open the garage door and park your car where you want it. Set ```stop_distance``` using the converted distance, if necessary, from Home Assistant. Again install the current config.
+
+You now have a basic setup
+
 ## Status
   * PCB Rev B: Is currently being fabricated and assembled by JLCPCB. Rev A worked well enough to write the code for ESPHome including the new STB4500 and TFMini components. The main problem with Rev A was the 5V DC/DC converter won't start at 5V. This was technically in the datasheet but there was also a minimum operating voltage the was well below 5V input. I didn't realize that you need to apply more than 5V for the regulator to start working and then you can lower the input to 5V. Not exactly what I needed.
   * Enclosure: Printed and successfully tested on Rev A. Rev B is ready to go when the PCB comes in.

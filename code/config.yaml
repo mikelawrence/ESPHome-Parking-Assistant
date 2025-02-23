@@ -166,13 +166,19 @@ binary_sensor:
 sensor:
   - platform: stusb4500
     alert_pin: GPIO8
-    flash_nvm: true
+    # flash_nvm: true
+    # Use this section for 12V LEDs with a 9V fall back. 5V not available.
     snk_pdo_numb: 3
     v_snk_pdo2: 9.00V
     i_snk_pdo2: 3.00A
     v_snk_pdo3: 12.00V
     i_snk_pdo3: 3.00A
     power_only_above_5v: true
+    # End 12V LED section
+    # Use this section for 5V LEDs.
+    # i_snk_pdo1: 3.00A
+    # snk_pdo_numb: 1
+    # End 5V LED section
     usb_comms_capable: true
     pd_state:
       id: pd_state
