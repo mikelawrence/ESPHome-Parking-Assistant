@@ -20,25 +20,37 @@ The 3.3V power supply will always have an input voltage greater than 3.3V. I cou
 
 For the 5V @ 1A power supply it's input voltage can be 5V so a regular step-down will not work. I chose the TPS552872, 36-V, 4-A, Fully Integrated Buck-boost Converter also from TI. This converter will switch to boost mode when the input voltage is 5V and still operate correctly. This power supply must be connected to the V<sub>BUS</sub> pass transistor and not directly to the V<sub>BUS</sub> on the USB connector. Doing so would exceed the 500mA maximum when connected to a USB 2.0 power source. Some USB 2.0 Power Sources support more than 500mA but the specification states 500mA maximum. So until PD is properly negotiated the V<sub>BUS</sub> to the RGB LED pixels and the 5.V power supply are not enabled.
 
-An INA228 85-V, 20-Bit, Ultra-Precise Power/Energy/Charge Monitor With I2C Interface device is used to monitor both energy and power consumption. Energy consumption is a better metric than instantaneous power for understanding actual device usage. Just look at what the power company uses to bill you kWh.
+An INA228 85-V, 20-Bit, Ultra-Precise Power/Energy/Charge Monitor With I2C Interface device is used to monitor both energy and power consumption. Energy consumption is a better metric than instantaneous power for understanding actual device usage. Just look at what the power company uses to bill you (kWh).
 
 ### TFMini Plus
 ResinChem Tech compared multiple distance sensors in his video. He settled on the TFMini-S sensor. I also chose a TFMini sensor but went with the TFMini Plus because it was in a more durable package with a lens cover. The spot size is different but in my tests this sensor worked just fine. This sensor can use a UART or I2C interface. The default UART interface can be set to automatically send measurements at a specified rate while the I2C must be setup with a UART command first and requires polling. The TFMini Plus requires 5V power but uses 3.3V logic levels.
 
 ### RGB LED pixel interface
-This board only supports RGB LED pixels that have a single data line for communication. SPI pixels are NOT supported. RGB LED pixels data line requires 5V logic level and while many will work with 3.3V logic level this is always a risk of data corruption. The best approach is to use a level translator here I selected a TC4427 with the V temperature range. The V temperature range is important because it lowers V~IH~ from 2.4V to 2.0V. The ESP32 has a V~OH~ or 0.8\*VCC or 0.8\*3.0=2.4V
+This board only supports RGB LED pixels that have a single data line for communication. SPI pixels are NOT supported. RGB LED pixels data line requires 5V logic level and while many will work with 3.3V logic level this is always a risk of data corruption. The best approach is to use a level translator here I selected a TC4427 with the V temperature range. The V temperature range is important because it lowers V<sub>IH</sub> from 2.4V to 2.0V. The ESP32 has a V<sub>OH</sub> or 0.8\*VCC or 0.8\*3.0=2.4V
 
 
 ## Enclosure
-The enclosure is designed to mount on [Elfa](https://www.containerstore.com/s/elfa/garage-plus-by-elfa/garage-plus-by-elfa-predesigned-spaces/garage-plus-7-tier-6-wall-shelving-solution/123d?productId=11023646) wire shelving.
 
-<img src="enclosure/meta/ESPHome%20Parking%20Assistant%20Enclosure%20Exploded.gif" width="100%">
+The enclosure is designed to mount on [Elfa](https://www.containerstore.com/s/elfa/garage-plus-by-elfa/garage-plus-by-elfa-predesigned-spaces/garage-plus-7-tier-6-wall-shelving-solution/123d?productId=11023646) wire shelving. I used [Autodesk Fusion](https://www.autodesk.com/products/fusion-360/overview) to design this enclosure. I'm a novice with this tool but I'm always looking to improve. For this design I tried out a few new features of Fusion, namely Rendering and Animation.
 
-There is more information [here](enclosure/README.md) about the enclosure.
+<p align="center">
+    <a href="enclosure"><img src="pcb/meta/ESPHome-Parking-Assistant-Render.png" width="70%"></a> <br />
+    Exploded View of Enclosure
+</p>
+
+## PCB
+
+This 4-layer board is designed with [KiCad](https://www.kicad.org/). I been using this free tool for a while and it just keeps getting better and better.
+
+<p align="center">
+    <a href="pcb"><img src="pcb/meta/ESPHome-Parking-Assistant-Render.png" width="70%"></a> <br />
+    3D Render of ESPHome Parking Assistant PCB
+</p>
 
 ## Operation
 
 ### LED status
+
 There are six LEDs on the PCB to indicate status.
 * **Status:** Will be green when operating conditions are normal and red when there has been an error.
 * **+5V:** Will be green when the +5V power supply is on. Note that +5V will only work when PD has been negotiated.
@@ -48,18 +60,22 @@ There are six LEDs on the PCB to indicate status.
 * **PD12V:** Will be green when the PDO3 (+12V) has been negotiated.
 
 > [!NOTE]
-> Note: that only one of the three PD LEDs will be lit at a time. If no PD LEDs are lit then no PD was negotiated.
+> Only one of the three PD LEDs will be lit at a time. If no PD LEDs are lit then no PD was negotiated.
 
 ### Connecting RGB LED strips
+The mate to the on-board terminal strip connector is Phoenix Contact 1847071.
+
 The LED connector has 4 wires.
 * **PD**: This is the LED voltage wire, often labeled 12V+ or 5V. This PCB support up to 3A at any voltage as long as the correct USB-C PD Power Source is connected.
 * **33Ω**: This is data line with a 33Ω series resistor. Use this for longer wire runs over 10ft.
 * **249Ω**: This is the same data line but with a 249Ω series resistor. Use this for shorter wire runs of less than 10ft.
 * **GND**: This is minus side of the LED voltage.
+
 > [!NOTE]
-> Note: Connect only one of 33Ω or 249Ω to your LED Strip.
+> Connect only one of 33Ω or 249Ω to your LED Strip.
+
 > [!NOTE]
-> Note: 12V RGB LEDs run just fine on 9V. In fact running at 9V may extend their life expectancy.
+> 12V RGB LEDs run just fine on 9V. In fact running at 9V may extend their life expectancy.
 
 ## Configuration
 ### STUSB4500 Configuration
@@ -102,7 +118,3 @@ You now have a basic setup
 ## Status
   * PCB Rev B: Is currently being fabricated and assembled by JLCPCB. Rev A worked well enough to write the code for ESPHome including the new STB4500 and TFMini components. The main problem with Rev A was the 5V DC/DC converter won't start at 5V. This was technically in the datasheet but there was also a minimum operating voltage the was well below 5V input. I didn't realize that you need to apply more than 5V for the regulator to start working and then you can lower the input to 5V. Not exactly what I needed.
   * Enclosure: Printed and successfully tested on Rev A. Rev B is ready to go when the PCB comes in.
-
-## Tools used
-  * PCB design: [KiCad](https://www.kicad.org/). I been using this free tool for a while and it just keeps getting better and better. 
-  * 3D Enclosure Modeling: [Autodesk Fusion](https://www.autodesk.com/products/fusion-360/overview). I a novice with this tool but I'm always looking to improve. For this design I tried out a few new features of Fusion, namely Rendering and Animation.
