@@ -34,7 +34,7 @@ This board only supports RGB LED pixels that have a single data line for communi
 The enclosure is designed to mount on [Elfa](https://www.containerstore.com/s/elfa/garage-plus-by-elfa/garage-plus-by-elfa-predesigned-spaces/garage-plus-7-tier-6-wall-shelving-solution/123d?productId=11023646) wire shelving. I used [Autodesk Fusion](https://www.autodesk.com/products/fusion-360/overview) to design this enclosure. I'm a novice with this tool but I'm always looking to improve. For this design I tried out a few new features of Fusion, namely Rendering and Animation.
 
 <p align="center">
-    <a href="enclosure"><img src="pcb/meta/ESPHome-Parking-Assistant-Render.png" width="70%"></a> <br />
+    <a href="enclosure"><img src="enclosure/meta/ESPHome%20Parking%20Assistant%20Enclosure%20Exploded.gif" width="70%"></a> <br />
     Exploded View of Enclosure
 </p>
 
