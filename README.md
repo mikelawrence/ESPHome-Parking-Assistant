@@ -1,15 +1,13 @@
 # ESPHome-Parking-Assistant
 From early on I learned that parking the car in the garage was a problem the needed to be solved. My Dad solved his problem with a piece of styrofoam hanging from the ceiling. When it touched the windshield you knew to stop. This was very important because the lawn mowing equipment was in front of the car. Crunch time was inevitable, don't ask me how I know. 
 
-I recently moved and the problem became an issue again. Not because there was a crunch time incident but because we needed as much room as possible in front of the car. Trying to part close the the main garage door was often a trial and error experience. With getting out of the car multiple times a frequent occurance. So I did some searching on Youtube and found this [video](https://www.youtube.com/watch?v=HqqlY4_3kQ8) from ResinChem Tech. I really liked his use of a RGB LED strip to indicate position and when to stop. 
+I recently moved and the problem became an issue again. Not because there was a crunch time incident but because we needed as much room as possible in front of the car. Having to get out of the car multiple times to make sure the door won't hit the car was a pain. So I did some searching on Youtube and found this [video](https://www.youtube.com/watch?v=HqqlY4_3kQ8) from ResinChem Tech. I really liked his use of a RGB LED strip to indicate position and when to stop. There is a ton of information so watch the whole video.1
 
-*So yes this is a complete ripoff of his idea!* But I wanted to do several things different. First I wanted to use ESPHome. I find it easier to use and integrate with Home Assistant. Second I really like designing my own hardware. And third I want to keep learning how to use Fusion 360 to design 3D printed stuff.
+***So yes this project is a complete ripoff of his idea!*** But I wanted to do several things different. First I wanted to use ESPHome. Second I really like designing my own hardware. And third I want to keep learning how to use Fusion 360 to design 3D printed stuff.
 
 ## Design Decisions
 ### ESP32 and ESPHome
-ESP32's are extremely cheap and have a ton of support like ESPHome. ESPHome is closely aligned with Home Assistant. In fact they are the same company. ESPHome just makes it easier to get an ESP32 running quickly and it directly supports Home Assistant. Home Assistant uses ESPHome for some of their hardware like the [Home Assistant Voice Preview Edition](https://www.home-assistant.io/voice-pe/) or [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html). 
-
-I chose a newer ESP32-S3 for this design which supports both WiFi and Bluetooth. The newer ESP32's work better with the ESP-IDF framework as opposed to the default Arduino framework. Not everything is supported in the ESP-IDF, particularly several of the RGB LED libraries like the Adafruit NeoPixel library but the ESP32 RMT LED Strip library works well once you make sure have enough memory RMT memory allocated.
+ESPHome is closely aligned with Home Assistant. In fact they are the same company. Home Assistant uses ESPHome for some of their hardware like the [Home Assistant Voice Preview Edition](https://www.home-assistant.io/voice-pe/) or [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html). I chose a newer ESP32-S3 for this design which also has Bluetooth support. The newer ESP32's work better with the ESP-IDF framework as opposed to the default Arduino framework. Not everything is supported in the ESP-IDF, particularly several of the RGB LED librariesbut the ESP32 RMT LED Strip library works well once you make sure have enough RMT memory allocated. Sometimes I add 
 
 ### USB-C Power Delivery
 I liked the idea of using RGB LED Pixels since ESPHome supports these directly without custom code. I wanted a flexible power supply for driving the RGB LED Pixels both in the power capacity and voltage. I've been using a MagWLED driver for driving RGB LED pixels for a while now and I really like it's approach to using USB-C PD (Power Delivery) to select between 5V and 12V. The USB-C PD 2.0/3.0 specification supports currents greater than 3A but will need a USB-C Power Cable with E-Marker and a USB-C PD Power Source that supports these higher currents. I went with the simpler and more supported max 3A. The USB-C PD 2.0/3.0 specification will negotiate several fixed voltages at 3A: 5V-15W, 9V-27W, 12V-36W, 15V-45W and 20V-60W. 12V-36W PD is less common in chargers but 9V-27W is always available. 12V RGB LED Pixels will usually run on 9V, the difference in LED brightness is not that noticeable and may make your LED live longer. To handle the USB-C PD negotiation I chose the STUSB4500 from ST Microelectronics. This guy will support negotiate all of the USB-C PD 2.0/3.0 specification but this design will support only the following: 5V-15W, 9V-27W or 12V-36W. The STUSB4500 will be configured to support 12V-36W with a fallback of 9V-27W or just 5V-15W
@@ -26,7 +24,7 @@ An INA228 85-V, 20-Bit, Ultra-Precise Power/Energy/Charge Monitor With I2C Inter
 ResinChem Tech compared multiple distance sensors in his video. He settled on the TFMini-S sensor. I also chose a TFMini sensor but went with the TFMini Plus because it was in a more durable package with a lens cover. The spot size is different but in my tests this sensor worked just fine. This sensor can use a UART or I2C interface. The default UART interface can be set to automatically send measurements at a specified rate while the I2C must be setup with a UART command first and requires polling. The TFMini Plus requires 5V power but uses 3.3V logic levels.
 
 ### RGB LED pixel interface
-This board only supports RGB LED pixels that have a single data line for communication. SPI pixels are NOT supported. RGB LED pixels data line requires 5V logic level and while many will work with 3.3V logic level this is always a risk of data corruption. The best approach is to use a level translator here I selected a TC4427 with the V temperature range. The V temperature range is important because it lowers V<sub>IH</sub> from 2.4V to 2.0V. The ESP32 has a V<sub>OH</sub> or 0.8\*VCC or 0.8\*3.0=2.4V
+This board only supports RGB LED pixels that have a single data line for communication. SPI pixels are NOT supported. RGB LED pixels requires 5V logic level on the data and while many will tell you that it will work just fine with 3.3V logic I prefer to be more conservative. After doing some [research](https://electricfiredesign.com/2021/03/12/logic-level-shifters-for-driving-led-strips/) I chose the TC4427V MOSFET Driver. It can source/sink 1.5A; definatley help long cable runs. Note the V temperature range option. The V option does more that expand the temperature range it also lowers V<sub>IH</sub> from 2.4V to 2.0V. This give plenty of margin for 3.3V ESP32 with a worst case V<sub>OH</sub> of 0.8\*VCC or 0.8\*3.0=2.4V.
 
 
 ## Enclosure
@@ -49,8 +47,10 @@ This 4-layer board is designed with [KiCad](https://www.kicad.org/). I been usin
 
 ## Operation
 
-### LED status
+### USB-C Power Delivery
+By USB-C PD 2.0 we make it easy to change the voltage for the RGB LED pixel but you have to have the right charger. 
 
+### LED status
 There are six LEDs on the PCB to indicate status.
 * **Status:** Will be green when operating conditions are normal and red when there has been an error.
 * **+5V:** Will be green when the +5V power supply is on. Note that +5V will only work when PD has been negotiated.
@@ -68,20 +68,19 @@ The mate to the on-board terminal strip connector is Phoenix Contact 1847071.
 The LED connector has 4 wires.
 * **PD**: This is the LED voltage wire, often labeled 12V+ or 5V. This PCB support up to 3A at any voltage as long as the correct USB-C PD Power Source is connected.
 * **33Ω**: This is data line with a 33Ω series resistor. Use this for longer wire runs over 10ft.
-* **249Ω**: This is the same data line but with a 249Ω series resistor. Use this for shorter wire runs of less than 10ft.
+* **249Ω**: This is the same data line but with a 249Ω series resistor. Use this for shorter wire runs.
 * **GND**: This is minus side of the LED voltage.
 
 > [!NOTE]
 > Connect only one of 33Ω or 249Ω to your LED Strip.
 
 > [!NOTE]
-> 12V RGB LEDs run just fine on 9V. In fact running at 9V may extend their life expectancy.
+> Many 12V RGB LEDs run just fine on 9V. In fact running at 9V may extend their life expectancy.
 
 ## Configuration
 ### STUSB4500 Configuration
-
 > [!CAUTION]
-> When configuring the STUSB4500 for the first time you should realize the default configuration will allow up to 20V on V<sub>BUS</sub>. This PCB works fine with 20V but this voltage is passed to the LED connector. Make sure your LEDs are disconnected before configuring the STUSB4500.
+> When configuring the STUSB4500 for the first time you should realize its default configuration will allow up to 20V on V<sub>BUS</sub>. This PCB works fine with 20V but this voltage is passed to the LED connector. Make sure your LEDs are disconnected before configuring the STUSB4500.
 
 1. Uncomment either the 12V LED section or the 5V LED section in the ```config.yaml``` file.
 2. Uncomment ```flash_nvm: true``` in the ```config.yaml``` file
