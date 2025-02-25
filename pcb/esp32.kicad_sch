@@ -5537,7 +5537,7 @@
 				(hide yes)
 			)
 		)
-		(property "Comment" "Resistor"
+		(property "Comment" ""
 			(at 172.72 102.87 0)
 			(effects
 				(font
@@ -5901,7 +5901,7 @@
 				(hide yes)
 			)
 		)
-		(property "Comment" "Resistor"
+		(property "Comment" ""
 			(at 99.06 44.45 0)
 			(effects
 				(font
@@ -6429,7 +6429,7 @@
 				(hide yes)
 			)
 		)
-		(property "Comment" "Resistor"
+		(property "Comment" ""
 			(at 162.56 44.45 0)
 			(effects
 				(font
@@ -7457,7 +7457,7 @@
 				(hide yes)
 			)
 		)
-		(property "Comment" "Resistor"
+		(property "Comment" ""
 			(at 182.88 44.45 0)
 			(effects
 				(font
@@ -8952,7 +8952,7 @@
 				(hide yes)
 			)
 		)
-		(property "Comment" "Resistor"
+		(property "Comment" ""
 			(at 172.72 44.45 0)
 			(effects
 				(font
@@ -9161,7 +9161,7 @@
 				(hide yes)
 			)
 		)
-		(property "Comment" "Resistor"
+		(property "Comment" ""
 			(at 109.22 44.45 0)
 			(effects
 				(font

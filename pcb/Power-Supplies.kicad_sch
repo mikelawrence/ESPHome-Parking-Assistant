@@ -7251,7 +7251,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor, Do Not Populate, 0402"
 			(at 177.8 139.7 0)
 			(effects
 				(font
@@ -7287,7 +7287,7 @@
 				(hide yes)
 			)
 		)
-		(property "Comment" "15K Resistor"
+		(property "Comment" ""
 			(at 177.8 139.7 0)
 			(effects
 				(font
@@ -7296,7 +7296,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C25539"
+		(property "LCSC" ""
 			(at 177.8 139.7 0)
 			(effects
 				(font
