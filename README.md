@@ -1,4 +1,4 @@
-# ESPHome-Parking-Assistant
+# ESPHome Parking Assistant
 From early on I learned that parking the car in the garage was a problem the needed to be solved. My Dad solved his problem with a piece of styrofoam hanging from the ceiling. When it touched the windshield you knew to stop. This was very important because the lawn mowing equipment was in front of the car. Crunch time was inevitable, don't ask me how I know. 
 
 I recently moved and the problem became an issue again. Not because there was a crunch time incident but because we needed as much room as possible in front of the car. Trying to part close the the main garage door was often a trial and error experience. With getting out of the car multiple times a frequent occurance. So I did some searching on Youtube and found this [video](https://www.youtube.com/watch?v=HqqlY4_3kQ8) from ResinChem Tech. I really liked his use of a RGB LED strip to indicate position and when to stop. 
@@ -66,7 +66,7 @@ There are six LEDs on the PCB to indicate status.
 The mate to the on-board terminal strip connector is Phoenix Contact 1847071.
 
 The LED connector has 4 wires.
-* **PD**: This is the LED voltage wire, often labeled 12V+ or 5V. This PCB support up to 3A at any voltage as long as the correct USB-C PD Power Source is connected.
+* **PD**: This is the LED voltage wire, often labeled 12V+ or 5V. This PCB supports up to 3A at 5V, 9V or 12V as long as the correct USB-C PD Power Source is connected.
 * **33Ω**: This is data line with a 33Ω series resistor. Use this for longer wire runs over 10ft.
 * **249Ω**: This is the same data line but with a 249Ω series resistor. Use this for shorter wire runs of less than 10ft.
 * **GND**: This is minus side of the LED voltage.
@@ -102,18 +102,20 @@ The LED connector has 4 wires.
    [00:00:19][C][stusb4500:116]:   NVM matches settings
    [00:00:19][C][stusb4500:130]:   PDO3 negotiated 12.00V @ 3.00A, 36.00W
    ```
-4. The STUSB4500 comonent does check to see that the NVM is indeed different before flashing the NVM but it is prudent to remove the ```NVM matches settings``` after it is clear the STUSB4500 is worked as configured.
+4. If you selected the 12V LED config section you should see either the PD12V LED or PD9V LED lit. PD5V should be lit if you selected the 5V LED section. 
+
+5. The STUSB4500 component does check to see that the NVM is indeed different before flashing the NVM but it is prudent to remove the ```NVM matches settings``` after it is clear the STUSB4500 is working as intended. You don't want to wear out your NVM.
 
 ### Installation
 Place the enclosure so the the sensor hits as flat an area as possible. For my car this is the license plate. You may have to play different options for best performance. My experience was pretty much place and forget. It just
 
 Now the sensor is placed, close the garage door with no car present. Home Assistant will show the measured distance. Convert to cm if necessary and subtract half of ```door_tolerance``` set ```door_distance``` to this value.
 
-Now we set ```start_distance``` to ```door_distance``` - 25. Install the current config.
+Next we set ```start_distance``` to ```door_distance``` - 25 and install the current config.
 
-Now open the garage door and park your car where you want it. Set ```stop_distance``` using the converted distance, if necessary, from Home Assistant. Again install the current config.
+For the final setting, open the garage door and park your car where you want it. Set ```stop_distance``` using the converted distance, if necessary, from Home Assistant and again install the current config.
 
-You now have a basic setup
+You now have a basic setup. Testing is in order. Back the car first and then start moving back in. Watch the LED strip light turn on and start movig toward the center as you move the car in. Stop as soon as the LED strip light turn green. Check the parking position and adjust ```stop_distance``` a little bit. As you repeat this test you will get a feel for how much to change ```stop_distance``` to get the car to stop in the right place.
 
 ## Status
   * PCB Rev B: Is currently being fabricated and assembled by JLCPCB. Rev A worked well enough to write the code for ESPHome including the new STB4500 and TFMini components. The main problem with Rev A was the 5V DC/DC converter won't start at 5V. This was technically in the datasheet but there was also a minimum operating voltage the was well below 5V input. I didn't realize that you need to apply more than 5V for the regulator to start working and then you can lower the input to 5V. Not exactly what I needed.

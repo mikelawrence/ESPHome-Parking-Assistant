@@ -1,4 +1,4 @@
-# ESPHome-Parking-Assistant PCB
+# ESPHome Parking Assistant PCB
 <p align="center">
     <img src="meta/ESPHome-Parking-Assistant-Render.png" width="70%"> <br />
     3D Render of ESPHome Parking Assistant PCB
@@ -16,4 +16,5 @@ The PCB is designed in [KiCad](https://www.kicad.org/). Fabrication and Assembly
 * 4 layer to support an additional ground plane and signal layer to reduce plane interruptions on the outer layers.
 * Dimension are 85mm X 59mm.
 * Requires oven reflow or hot air to assemble some components.
+* Supports TFMini Plus, TFMini-S and TFLuna Range Finder Sensors. Enclosure is designed for TFMini Plus Sensor.
 

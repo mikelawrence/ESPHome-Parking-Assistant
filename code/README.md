@@ -1,6 +1,6 @@
-# ESPHome-Parking-Assistant Code
+# ESPHome Parking Assistant Code
 
-Use the ```config.yaml``` file above to configure the ESPHome-Parking-Assistant in ESPHome.
+Use the ```config.yaml``` file above to configure the ESPHome Parking Assistant in ESPHome.
 
 ## STUSB4500 and TFMini External Components
 
