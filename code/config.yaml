@@ -142,16 +142,19 @@ text_sensor:
 
 binary_sensor:
   # this is a sensor on the garage door that turns true when open
+  # the range finder cannot tell if the garage door is open when a car is present
+  # this sensor supplements the garage door open state when a car is present
+  # remove ha_garage_door_open and garage_door binary sensors if you do not have a sensor like this in Home Assistant
   - platform: homeassistant
     name: "Car Garage Door Sensor"
     id: ha_garage_door_open
     entity_id: binary_sensor.car_garage_door_sensor
-  # the range finder cannot tell if the garage door is open when a car is present
-  # the sensor above is use to supplement the garage door open state when a car is present
   - platform: template
+    id: garage_door
     name: "Garage Door"
     device_class: garage_door
     lambda: "return ((id(state) >= 0) && (id(state) < 10)) || id(ha_garage_door_open).state;"
+  # remove to here if you do not have a garage door sensor in Home Assisatnt
   - platform: template
     name: "Car in Garage"
     device_class: presence
