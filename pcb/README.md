@@ -1,15 +1,13 @@
 # ESPHome Parking Assistant PCB
 <p align="center">
-    <img src="meta/ESPHome-Parking-Assistant-Render.png" width="70%"> <br />
-    3D Render of ESPHome Parking Assistant PCB
+    <img src="meta/ESPHome-Parking-Assistant-Render.png" width="100%"> <br />
 </p>
 
 The PCB is designed in [KiCad](https://www.kicad.org/). Fabrication and Assembly is tuned toward [JCLPCB](https://jlcpcb.com/). The production folder has everything you need for JLCPCB to send you fully assembled boards.
 
 ## Schematic
 <p align="center">
-    <a href="ESPHome-Parking-Assistant-Schematic.pdf"><img src="meta/ESPHome-Parking-Assistant-Schematic.png" width="100%"></a> <br />
-    Schematic
+    <a href="ESPHome-Parking-Assistant-Schematic.pdf"><img src="meta/ESPHome-Parking-Assistant-Schematic.png" width="100%" ></a> <br />
 </p>
 
 ### Do Not Populate (DNP) Notes
@@ -21,7 +19,7 @@ The PCB is designed in [KiCad](https://www.kicad.org/). Fabrication and Assembly
 
 ## Bill of Materials
 <p align="center">
-    <a href="https://htmlpreview.github.io/?https://github.com/mikelawrence/ESPHome-Parking-Assistant/blob/main/pcb/interactive-bom/index.html"><img src="meta/ESPHome-Parking-Assistant-BOM.png" width="50%"></a> <br />
+    <a href="https://htmlpreview.github.io/?https://github.com/mikelawrence/ESPHome-Parking-Assistant/blob/main/pcb/interactive-bom/index.html"><img src="meta/ESPHome-Parking-Assistant-BOM.png" width="100%"></a> <br />
     Interactive BOM
 </p>
 
