@@ -8,7 +8,7 @@ The PCB is designed in [KiCad](https://www.kicad.org/). Fabrication and Assembly
 
 ## Schematic
 <p align="center">
-    <a href="ESPHome-Parking-Assistant-Schematic.pdf"><img src="meta/ESPHome-Parking-Assistant-Schematic.png" width="70%"></a> <br />
+    <a href="ESPHome-Parking-Assistant-Schematic.pdf"><img src="meta/ESPHome-Parking-Assistant-Schematic.png" width="100%"></a> <br />
     Schematic
 </p>
 
