@@ -13,10 +13,10 @@ The PCB is designed in [KiCad](https://www.kicad.org/). Fabrication and Assembly
 </p>
 
 ### Do Not Populate (DNP) Notes
-* ```C9```, ```C10```, ```R16``` and ```R17```: These components are an optional snubber used to reduce EMI.
+* ```C9```, ```C10```, ```R16``` and ```R17```: These components are an optional snubber used to reduce EMI. Not needed.
 * ```R31``` and ```R32``` are pullups for open drain outputs. If these pins are used the 10K pullup will be enabled on the ESP32 input pins.
 * ```R33``` and ```R35``` are pullups for the I<sub>2</sub>C Bus. By default the internal ESP32 pullups are enabled.
-* ```R34``` and ```R36``` can be used to pullup or pulldown the ```CONFIG``` pin on the TFLuna connector. For now this is not necessary because the code only support the UART interface on the TFLuna and leaving ```CONFIG``` floating will enable the UART. 
+* ```R34``` and ```R36``` can be used to pullup or pulldown the ```CONFIG``` pin on the TFLuna connector. For now this is not necessary because the code only supports the UART interface on the TFLuna and leaving ```CONFIG``` floating will enable the UART. 
 * ```R26``` is used to compensate for cable droop. Not currently used.
 
 ## Bill of Materials

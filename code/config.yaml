@@ -1,3 +1,4 @@
+
 substitutions:
   name: "parking-assistant"
   friendly_name: "Parking Assistant"
@@ -17,7 +18,7 @@ esphome:
     version: 0.1.0
   on_boot:
     - light.turn_on:
-        id: led_strip_1
+        id: led_strip
         brightness: 100%
         effect: "Parking Bar"
 
@@ -28,20 +29,24 @@ esp32:
   framework:
     type: esp-idf
 
+# psram:
+#   mode: octal
+#   speed: 80MHz
+
 external_components:
   - source:
       type: git
       url: https://github.com/mikelawrence/esphome-components
 
-esp32_ble_tracker:
-  scan_parameters:
-    # We currently use the defaults to ensure Bluetooth
-    # can co-exist with WiFi In the future we may be able to
-    # enable the built-in coexistence logic in ESP-IDF
-    active: true
+# esp32_ble_tracker:
+#   scan_parameters:
+#     # We currently use the defaults to ensure Bluetooth
+#     # can co-exist with WiFi In the future we may be able to
+#     # enable the built-in coexistence logic in ESP-IDF
+#     active: true
 
-bluetooth_proxy:
-  active: true
+# bluetooth_proxy:
+#   active: true
 
 # Disable logging, this will greatly reduce glitching on the light bar
 logger:
@@ -52,7 +57,7 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    key: "*************"
+    key: mpFBP+apdcrB3yCqG6ieFTunwUGe31kPHWxF9l2Ncsk=
 
 # Enable Over-the-Air updates
 ota:
@@ -65,7 +70,7 @@ wifi:
   password: !secret wifi_password
   # using fast_connect since it is required for hidden networks.
   fast_connect: true
-  use_address: 172.30.4.181
+  use_address: 172.30.4.130
 
 globals:
   # Garage Door Closed = 0, Garage Door Open = 10, Car Parking Zone = 20, Car Parked = 30, Car Over = 40
@@ -89,6 +94,11 @@ i2c:
   sda: GPIO17
   scl: GPIO18
   frequency: 400kHz
+
+power_supply:
+  - id: 'power_supply_5V'
+    pin: GPIO38
+    enable_on_boot: true
 
 button:
   - platform: restart
@@ -142,19 +152,16 @@ text_sensor:
 
 binary_sensor:
   # this is a sensor on the garage door that turns true when open
-  # the range finder cannot tell if the garage door is open when a car is present
-  # this sensor supplements the garage door open state when a car is present
-  # remove ha_garage_door_open and garage_door binary sensors if you do not have a sensor like this in Home Assistant
   - platform: homeassistant
     name: "Car Garage Door Sensor"
     id: ha_garage_door_open
     entity_id: binary_sensor.car_garage_door_sensor
+  # the range finder cannot tell if the garage door is open when a car is present
+  # the sensor above is use to supplement the garage door open state when a car is present
   - platform: template
-    id: garage_door
     name: "Garage Door"
     device_class: garage_door
     lambda: "return ((id(state) >= 0) && (id(state) < 10)) || id(ha_garage_door_open).state;"
-  # remove to here if you do not have a garage door sensor in Home Assisatnt
   - platform: template
     name: "Car in Garage"
     device_class: presence
@@ -165,44 +172,61 @@ binary_sensor:
   - platform: template
     name: "Car Parked too Far"
     lambda: "return ((id(state) >= 40) && (id(state) < 50));"
+  - platform: gpio
+    name: "5V Power Good"
+    pin:
+      number: GPIO15
+      mode:
+        input: true
+        pullup: true
+  - platform: gpio
+    name: "Overload"
+    pin:
+      number: GPIO16
+      inverted: true
+      mode:
+        input: true
+        pullup: true
 
 sensor:
   - platform: stusb4500
+    id: pd_controller
     alert_pin: GPIO8
     # flash_nvm: true
-    # Use this section for 12V LEDs with a 9V fall back. 5V not available.
-    snk_pdo_numb: 3
-    v_snk_pdo2: 9.00V
-    i_snk_pdo2: 3.00A
-    v_snk_pdo3: 12.00V
-    i_snk_pdo3: 3.00A
-    power_only_above_5v: true
-    # End 12V LED section
-    # Use this section for 5V LEDs.
+    # # Use this section for 5V LEDs.
     # i_snk_pdo1: 3.00A
     # snk_pdo_numb: 1
-    # End 5V LED section
+    # # End 5V LED section
+    # Use this section for 12V LEDs
+    snk_pdo_numb: 3
+    i_snk_pdo1: 3.00A
+    v_snk_pdo2: 9.00V
+    i_snk_pdo2: 2.00A
+    v_snk_pdo3: 12.00V
+    i_snk_pdo3: 3.00A
+    # End 12V LED section
+    # power_only_above_5v: true
+    gpio_cfg: SW_CTRL_GPIO
     usb_comms_capable: true
     pd_state:
       id: pd_state
       on_value:
         - lambda: !lambda |-
-            if (x <= 1) {
-              auto call = id(led_status).turn_on();
-              call.set_brightness(0.4);
-              call.set_rgb(1.0, 0.0, 0.0);
-              call.set_effect("Flash");
-              call.perform();
-            } else if (x == 2) {
-              auto call = id(led_status).turn_on();
-              call.set_brightness(0.4);
-              call.set_rgb(0, 1.0, 0.0);
-              //call.set_effect("Flash");
-              call.perform();
+            if (x == 1) {
+              id(pd_controller).turn_gpio_on();
             } else {
+              id(pd_controller).turn_gpio_off();
+            }
+            if (x == 0) {
               auto call = id(led_status).turn_on();
               call.set_brightness(0.4);
               call.set_rgb(0.0, 1.0, 0.0);
+              // call.set_effect("Flash");
+              call.perform();
+            } else if ((x >= 1) && (x <= 3)) {
+              auto call = id(led_status).turn_on();
+              call.set_brightness(0.4);
+              call.set_rgb(0.0, 0.0, 1.0);
               call.perform();
             }
     pd_status:
@@ -210,28 +234,35 @@ sensor:
 
   - platform: ina2xx_i2c
     id: led_power
-    model: INA238
+    model: INA228
     address: 0x40
     shunt_resistance: 0.050ohm
     max_current: 3A
     adc_range: 0
     update_interval: 10s
-    current:
-      name: "LED Current"
-      accuracy_decimals: 2
     bus_voltage:
-      name: "LED Voltage"
+      name: "Voltage"
       accuracy_decimals: 2
     power:
-      name: "LED Power"
+      name: "Power"
+      accuracy_decimals: 2
+    energy:
+      name: "Energy"
       accuracy_decimals: 2
 
   - platform: tfmini
     uart_id: tfmini_uart
-    model: TFMINI_PLUS
+    model: TFMINI_S
     sample_rate: 10
     version:
+      id: tfmini_firmware_version
       name: "TFMini Firmware Version"
+    signal_strength:
+      id: tfmini_signal_strength
+      name: "Signal"
+      accuracy_decimals: 0
+      filters:
+        - throttle: 1s
     distance:
       id: tfmini_distance
       internal: true
@@ -254,13 +285,6 @@ sensor:
 
 light:
   - platform: esp32_rmt_led_strip
-    id: main_status
-    rgb_order: GRB
-    pin: GPIO7
-    num_leds: 1
-    chipset: ws2812
-    rmt_symbols: 48
-  - platform: esp32_rmt_led_strip
     id: led_status
     rgb_order: GRB
     pin: GPIO6
@@ -279,11 +303,10 @@ light:
           update_interval: 200ms
 
   - platform: esp32_rmt_led_strip
-    id: led_strip_1
+    id: led_strip
     default_transition_length : 0s
     rgb_order: GRB
-    # pin: GPIO47   # LED 1
-    pin: GPIO48   # LED 2
+    pin: GPIO47
     num_leds: 141
     chipset: ws2812
     use_psram: false

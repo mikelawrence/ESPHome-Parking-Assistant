@@ -52,15 +52,15 @@ By USB-C PD 2.0 we make it easy to change the voltage for the RGB LED pixel but 
 
 ### LED status
 There are six LEDs on the PCB to indicate status.
-* **Status:** Will be green when operating conditions are normal and red when there has been an error.
-* **+5V:** Will be green when the +5V power supply is on. Note that +5V will only work when PD has been negotiated.
+* **Status:** If dark something is misconfigured or damaged. If blue PS was successfully negotiated. If Power Delivery failed but +5V is available on VBUS the LED will be red. Generally you shouldn't be using the connected charger for lighting up the LEDs unless you know it can support the power requirements. Keep in mind this board was designed for USB-C Power Delivery so why don't you connect one.
+* **+5V:** Will be green when the +5V power supply is on. This power supply comes from VBUS and supports 4.5V - 22 V inputs.
 * **+3.3V:** Will be green when the +3.3V power supply is on. This power supply is always on when connected to USB-C or USB 2.0 power sources. If the LED is off then the USB is not connected or there is a failure.
-* **PD5V:** Will be green when the PDO1 (+5V) has been negotiated.
-* **PD9V:** Will be green when the PDO2 (+9V) has been negotiated.
-* **PD12V:** Will be green when the PDO3 (+12V) has been negotiated.
+* **PD5V:** Will be blue when PDO1 (+5V) has been negotiated.
+* **PD9V:** Will be blue when PDO2 (+9V) has been negotiated.
+* **PD12V:** Will be blue when PDO3 (+12V) has been negotiated.
 
 > [!NOTE]
-> Only one of the three PD LEDs will be lit at a time. If no PD LEDs are lit then no PD was negotiated.
+> Only one of the three PD LEDs will be lit at a time.
 
 ### Connecting RGB LED strips
 The mate to the on-board terminal strip connector is Phoenix Contact 1847071.
