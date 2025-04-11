@@ -7,7 +7,7 @@ I recently moved and the problem became an issue again. Not because there was a 
 
 ## Design Decisions
 ### ESP32 and ESPHome
-ESPHome is closely aligned with Home Assistant. In fact they are the same company. Home Assistant uses ESPHome for some of their hardware like the [Home Assistant Voice Preview Edition](https://www.home-assistant.io/voice-pe/) or [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html). I chose a newer ESP32-S3 for this design which also has Bluetooth support. The newer ESP32's work better with the ESP-IDF framework as opposed to the default Arduino framework. Not everything is supported in the ESP-IDF, particularly several of the RGB LED librariesbut the ESP32 RMT LED Strip library works well once you make sure have enough RMT memory allocated. Sometimes I add 
+ESPHome is closely aligned with Home Assistant. In fact they are the same company. Home Assistant uses ESPHome for some of their hardware like the [Home Assistant Voice Preview Edition](https://www.home-assistant.io/voice-pe/) or [Bluetooth Proxy](https://esphome.io/components/bluetooth_proxy.html). I chose a newer ESP32-S3 for this design which also has Bluetooth support. The newer ESP32's work better with the ESP-IDF framework as opposed to the default Arduino framework. Not everything is supported in the ESP-IDF, particularly several of the RGB LED libraries but the ESP32 RMT LED Strip library works well once you make sure have enough RMT memory allocated.
 
 ### USB-C Power Delivery
 I liked the idea of using RGB LED Pixels since ESPHome supports these directly without custom code. I wanted a flexible power supply for driving the RGB LED Pixels both in the power capacity and voltage. I've been using a MagWLED driver for driving RGB LED pixels for a while now and I really like it's approach to using USB-C PD (Power Delivery) to select between 5V and 12V. The USB-C PD 2.0/3.0 specification supports currents greater than 3A but will need a USB-C Power Cable with E-Marker and a USB-C PD Power Source that supports these higher currents. I went with the simpler and more supported max 3A. The USB-C PD 2.0/3.0 specification will negotiate several fixed voltages at 3A: 5V-15W, 9V-27W, 12V-36W, 15V-45W and 20V-60W. 12V-36W PD is less common in chargers but 9V-27W is always available. 12V RGB LED Pixels will usually run on 9V, the difference in LED brightness is not that noticeable and may make your LED live longer. To handle the USB-C PD negotiation I chose the STUSB4500 from ST Microelectronics. This guy will support negotiate all of the USB-C PD 2.0/3.0 specification but this design will support only the following: 5V-15W, 9V-27W or 12V-36W. The STUSB4500 will be configured to support 12V-36W with a fallback of 9V-27W or just 5V-15W
@@ -25,7 +25,6 @@ ResinChem Tech compared multiple distance sensors in his video. He settled on th
 
 ### RGB LED pixel interface
 This board only supports RGB LED pixels that have a single data line for communication. SPI pixels are NOT supported. RGB LED pixels requires 5V logic level on the data and while many will tell you that it will work just fine with 3.3V logic I prefer to be more conservative. After doing some [research](https://electricfiredesign.com/2021/03/12/logic-level-shifters-for-driving-led-strips/) I chose the TC4427V MOSFET Driver. It can source/sink 1.5A; definatley help long cable runs. Note the V temperature range option. The V option does more that expand the temperature range it also lowers V<sub>IH</sub> from 2.4V to 2.0V. This give plenty of margin for 3.3V ESP32 with a worst case V<sub>OH</sub> of 0.8\*VCC or 0.8\*3.0=2.4V.
-
 
 ## Enclosure
 
@@ -48,11 +47,11 @@ This 4-layer board is designed with [KiCad](https://www.kicad.org/). I been usin
 ## Operation
 
 ### USB-C Power Delivery
-By USB-C PD 2.0 we make it easy to change the voltage for the RGB LED pixel but you have to have the right charger. 
+By USB-C PD 2.0 we make it easy to change the voltage for the RGB LED pixel but you have to have the right power brick. 
 
 ### LED status
 There are six LEDs on the PCB to indicate status.
-* **Status:** If dark something is misconfigured or damaged. If blue PS was successfully negotiated. If Power Delivery failed but +5V is available on VBUS the LED will be red. Generally you shouldn't be using the connected charger for lighting up the LEDs unless you know it can support the power requirements. Keep in mind this board was designed for USB-C Power Delivery so why don't you connect one.
+* **Status:** If dark something is misconfigured or damaged. If blue PS was successfully negotiated. If Power Delivery failed but +5V is available on VBUS the LED will be red. Generally you shouldn't be using the connected power brick for lighting up the LEDs unless you know it can support the power requirements. Keep in mind this board was designed for USB-C Power Delivery so why don't you connect one.
 * **+5V:** Will be green when the +5V power supply is on. This power supply comes from VBUS and supports 4.5V - 22 V inputs.
 * **+3.3V:** Will be green when the +3.3V power supply is on. This power supply is always on when connected to USB-C or USB 2.0 power sources. If the LED is off then the USB is not connected or there is a failure.
 * **PD5V:** Will be blue when PDO1 (+5V) has been negotiated.
@@ -60,7 +59,7 @@ There are six LEDs on the PCB to indicate status.
 * **PD12V:** Will be blue when PDO3 (+12V) has been negotiated.
 
 > [!NOTE]
-> Only one of the three PD LEDs will be lit at a time.
+> Only one of the three PD LEDs will be lit at a time. 
 
 ### Connecting RGB LED strips
 The mate to the on-board terminal strip connector is Phoenix Contact 1847071.
