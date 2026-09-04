@@ -5,4 +5,5 @@
   (lib (name "ESP32-S3")(type "KiCad")(uri "${KIPRJMOD}/libraries/ESP32-S3/ESP32-S3.kicad_sym")(options "")(descr ""))
   (lib (name "TC4427")(type "KiCad")(uri "${KIPRJMOD}/libraries/TC4427/TC4427.kicad_sym")(options "")(descr ""))
   (lib (name "TPS552872RYQR")(type "KiCad")(uri "${KIPRJMOD}/libraries/TPS552872RYQR/KiCADv6/TPS552872RYQR.kicad_sym")(options "")(descr ""))
+  (lib (name "ESP32-C3-MINI-1-N4X")(type "KiCad")(uri "C:/Users/mike/OneDrive/Documents/GitHub/esphome-plant-shelf-fan-controller/pcb/libraries/ESP32-C3-MINI/ESP32-C3-MINI-1-N4X.kicad_sym")(options "")(descr ""))
 )

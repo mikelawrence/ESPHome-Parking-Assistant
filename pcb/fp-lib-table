@@ -5,4 +5,5 @@
   (lib (name "VLCF4028T-100M1R0-2")(type "KiCad")(uri "${KIPRJMOD}/libraries/VLCF4028T-100M1R0-2")(options "")(descr ""))
   (lib (name "TYPE-C-31-M-12")(type "KiCad")(uri "${KIPRJMOD}/libraries/TYPE-C-31-M-12")(options "")(descr ""))
   (lib (name "TPS552872RYQR")(type "KiCad")(uri "${KIPRJMOD}/libraries/TPS552872RYQR")(options "")(descr ""))
+  (lib (name "ESP32-C3-MINI")(type "KiCad")(uri "C:/Users/mike/OneDrive/Documents/GitHub/esphome-plant-shelf-fan-controller/pcb/libraries/ESP32-C3-MINI")(options "")(descr ""))
 )
